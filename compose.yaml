@@ -15,11 +15,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       API_PREFIX: api
-      MONGODB_URI: mongodb+srv://mohamedhmm001_db_user:ixHPE5HK8bFPMOKG@cluster0.ychpufo.mongodb.net/?appName=Cluster0
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     ports:
       - 3000:3000
   db:
-    image: mongo:8
+    image: mongo:7.0
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db

@@ -11,6 +11,7 @@ import {
   SaveOptions,
   SortOrder,
   UpdateQuery,
+  HydratedDocument,
 } from 'mongoose';
 
 type Population = PopulateOptions | (PopulateOptions | string)[];
@@ -55,9 +56,12 @@ export abstract class EntityRepository<T extends Object> {
     return query.exec();
   }
 
-  async create(createEntityData: unknown, options?: SaveOptions) {
+  async create(
+    createEntityData: Partial<T>,
+    options?: SaveOptions,
+  ): Promise<HydratedDocument<T>> {
     const entity = new this.entityModel(createEntityData);
-    return entity.save(options);
+    return entity.save(options) as unknown as Promise<HydratedDocument<T>>;
   }
 
   async insertMany(entitiesData: unknown, options?: InsertManyOptions) {

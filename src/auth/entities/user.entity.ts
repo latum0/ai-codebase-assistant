@@ -1,4 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+
+export type UserDocument = HydratedDocument<User>;
 
 export enum UserRole {
   USER = 'user',
@@ -15,8 +18,12 @@ export class User {
     unique: true,
     lowercase: true,
     trim: true,
+    index: true,
   })
   email!: string;
+
+  @Prop({})
+  photo?: string;
 
   @Prop({
     required: true,
@@ -41,10 +48,7 @@ export class User {
   @Prop({ default: false })
   isEmailVerified!: boolean;
 
-  @Prop({ default: null })
-  avatarUrl!: string | null;
-
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   lastLoginAt!: Date | null;
 }
 
