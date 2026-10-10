@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateAuthDto } from '../dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +13,7 @@ import { UserResponseDto } from '../dto/user-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { Types } from 'mongoose';
+import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -51,6 +56,45 @@ export class AuthService {
       }
       throw err;
     }
+  }
+
+  async login(loginDto: LoginDto): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne(
+      { email: loginDto.email },
+      { select: '+passwordHash' },
+    );
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isMatch = await bcrypt.compare(loginDto.password, user.passwordHash);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    await this.refreshTokenRepository.findOneAndDelete({ user: user._id });
+
+    const email = user.email;
+    const role = user.role;
+    const displayName = user.displayName;
+    const photo = user.photo ?? null;
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user._id.toString(),
+      email,
+      role,
+    );
+
+    const payload: UserResponseDto = {
+      email,
+      displayName,
+      photo,
+      accessToken,
+      refreshToken,
+    };
+
+    return payload;
   }
 
   private async generateTokens(

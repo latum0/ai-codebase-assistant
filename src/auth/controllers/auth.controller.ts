@@ -19,6 +19,7 @@ import { UpdateAuthDto } from '../dto/update-user.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -35,8 +36,13 @@ export class AuthController {
   })
   @ApiResponse({ status: 409, description: 'Email already registered' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  create(@Body() createUserDto: CreateUserDto) {
+  register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
+  }
+
+  @Post('login')
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
   @Get()
