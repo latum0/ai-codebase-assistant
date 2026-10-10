@@ -36,39 +36,32 @@ export class AuthController {
   })
   @ApiResponse({ status: 409, description: 'Email already registered' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  register(@Body() createUserDto: CreateUserDto) {
+  register(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
     return this.authService.register(createUserDto);
   }
 
   @Post('login')
-  login(@Body() loginDto: LoginDto) {
+  @ApiOperation({ summary: 'Log in a user' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid email or password',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed',
+  })
+  login(@Body() loginDto: LoginDto): Promise<UserResponseDto> {
     return this.authService.login(loginDto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all users' })
-  findAll() {
-    return this.authService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', example: '507f1f77bcf86cd799439011' })
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a user' })
-  @ApiParam({ name: 'id', example: '507f1f77bcf86cd799439011' })
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user' })
-  @ApiParam({ name: 'id', example: '507f1f77bcf86cd799439011' })
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
-  }
+  findOne(@Param('id') id: string) {}
 }
