@@ -5,6 +5,7 @@ import * as Joi from 'joi';
 
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
 
     UsersModule,
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
