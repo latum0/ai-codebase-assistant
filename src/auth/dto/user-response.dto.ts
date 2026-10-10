@@ -1,36 +1,21 @@
-import { Transform } from 'class-transformer';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserResponseDto {
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  @ApiProperty({ example: 'mohamed@example.com' })
+  email!: string;
 
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(80)
-  displayName: string;
+  @ApiProperty({ example: 'Mohamed' })
+  displayName!: string;
 
-  @IsOptional()
-  @IsString()
-  photo: string | null;
+  @ApiPropertyOptional({
+    example: 'https://example.com/photo.jpg',
+    nullable: true,
+  })
+  photo!: string | null;
 
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
   accessToken!: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
   refreshToken!: string;
 }
