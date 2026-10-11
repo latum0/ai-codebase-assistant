@@ -89,6 +89,11 @@ export class AuthController {
   }
 
   @Get('profile')
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+  })
   async getProfile(@UserContext() userId: Types.ObjectId) {
     return this.authService.getProfile(userId);
   }
