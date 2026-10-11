@@ -21,6 +21,8 @@ import { UserResponseDto } from '../dto/user-response.dto';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { UserContext } from '../../utils/decorators/user-context';
+import { Types } from 'mongoose';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -84,5 +86,10 @@ export class AuthController {
   })
   async refreshToken(@Body() body: RefreshTokenDto) {
     return this.authService.refreshToken(body.refreshToken);
+  }
+
+  @Get('profile')
+  async getProfile(@UserContext() userId: Types.ObjectId) {
+    return this.authService.getProfile(userId);
   }
 }

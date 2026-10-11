@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -149,5 +150,14 @@ export class AuthService {
     );
 
     return { accessToken, refreshToken };
+  }
+
+  async getProfile(id: Types.ObjectId): Promise<User> {
+    const profile = await this.userRepository.findOne({ _id: id });
+    if (!profile) {
+      throw new BadRequestException('Profile not found.');
+    }
+
+    return profile;
   }
 }
