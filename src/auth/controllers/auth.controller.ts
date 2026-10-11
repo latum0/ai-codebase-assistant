@@ -64,4 +64,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', example: '507f1f77bcf86cd799439011' })
   findOne(@Param('id') id: string) {}
+
+  @Post('refresh')
+  async refreshToken(@Body() body: { refreshToken: string }) {
+    const refreshToken = body.refreshToken;
+    return this.authService.refreshToken(refreshToken);
+  }
 }

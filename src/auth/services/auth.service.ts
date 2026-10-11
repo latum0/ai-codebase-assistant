@@ -124,4 +124,30 @@ export class AuthService {
     });
     return { accessToken, refreshToken };
   }
+
+  async refreshToken(
+    oldRefreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const token = await this.jwtService.verify(oldRefreshToken, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+    });
+
+    const existingToken = await this.refreshTokenRepository.find({
+      token: oldRefreshToken,
+    });
+
+    if (!existingToken) {
+      throw new UnauthorizedException('Token invalid or expired.');
+    }
+
+    await this.refreshTokenRepository.deleteMany({ token });
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      token.sub,
+      token.email,
+      token.role,
+    );
+
+    return { accessToken, refreshToken };
+  }
 }
