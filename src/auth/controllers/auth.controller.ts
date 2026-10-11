@@ -20,6 +20,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -66,8 +67,22 @@ export class AuthController {
   findOne(@Param('id') id: string) {}
 
   @Post('refresh')
-  async refreshToken(@Body() body: { refreshToken: string }) {
-    const refreshToken = body.refreshToken;
-    return this.authService.refreshToken(refreshToken);
+  @ApiOperation({ summary: 'Refresh access and refresh tokens' })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Tokens refreshed successfully',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired refresh token',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed',
+  })
+  async refreshToken(@Body() body: RefreshTokenDto) {
+    return this.authService.refreshToken(body.refreshToken);
   }
 }
