@@ -93,7 +93,6 @@ export class AuthController {
     description: 'User profile retrieved successfully',
   })
   async getProfile(@UserContext() userId: Types.ObjectId) {
-    console.log('test');
     return this.authService.getProfile(userId);
   }
 }
