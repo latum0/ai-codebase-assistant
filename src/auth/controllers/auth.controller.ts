@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,6 +24,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { UserContext } from '../../utils/decorators/user-context';
 import { Types } from 'mongoose';
+import { JwtGuard } from '../guards/jwt.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -63,11 +65,6 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a user by ID' })
-  @ApiParam({ name: 'id', example: '507f1f77bcf86cd799439011' })
-  findOne(@Param('id') id: string) {}
-
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiBody({ type: RefreshTokenDto })
@@ -88,6 +85,7 @@ export class AuthController {
     return this.authService.refreshToken(body.refreshToken);
   }
 
+  @UseGuards(JwtGuard)
   @Get('profile')
   @ApiOperation({ summary: 'Get user profile' })
   @ApiResponse({
@@ -95,6 +93,7 @@ export class AuthController {
     description: 'User profile retrieved successfully',
   })
   async getProfile(@UserContext() userId: Types.ObjectId) {
+    console.log('test');
     return this.authService.getProfile(userId);
   }
 }

@@ -10,10 +10,13 @@ import {
 } from './entities/refresh-token.entity';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
-    JwtModule.register({}),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({ global: true }),
     MongooseModule.forFeature([
       {
         name: User.name,
@@ -26,6 +29,7 @@ import { JwtModule } from '@nestjs/jwt';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserRepository, RefreshTokenRepository],
+  providers: [AuthService, UserRepository, RefreshTokenRepository, JwtStrategy],
+  exports: [PassportModule],
 })
 export class AuthModule {}
