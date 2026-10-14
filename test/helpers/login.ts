@@ -7,7 +7,7 @@ export const login = async (app: INestApplication): Promise<string> => {
     password: 'SecurePass123!',
   });
 
-  if (!result) {
+  if (!result.body.accessToken) {
     throw new UnauthorizedException('There is no token');
   }
 
