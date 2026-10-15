@@ -100,4 +100,52 @@ describe('Auth E2E', () => {
       await request(app.getHttpServer()).get('/auth/profile').expect(401);
     });
   });
+
+  describe('POST /auth/login', () => {
+    it('Should log in and set an HttpOnly refresh cookie', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'mohamed@gmail.com',
+          password: 'SecurePass123!',
+        })
+        .expect(200);
+
+      expect(response.body.accessToken).toBeDefined();
+      expect(response.body.refreshToken).toBeUndefined();
+
+      const rawCookies = response.headers['set-cookie'];
+
+      const cookies = rawCookies
+        ? Array.isArray(rawCookies)
+          ? rawCookies
+          : [rawCookies]
+        : [];
+
+      const cookie = cookies?.find((item) => item.startsWith('refreshToken='));
+
+      expect(cookie).toBeDefined();
+      expect(cookie).toMatch(/HttpOnly/i);
+    });
+
+    it('Should reject an incorrect password', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'mohamed@gmail.com',
+          password: 'WrongPassword123!',
+        })
+        .expect(401);
+    });
+
+    it('Should reject an unknown email', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'unknown-auth-e2e@example.com',
+          password: 'SecurePass123!',
+        })
+        .expect(401);
+    });
+  });
 });
