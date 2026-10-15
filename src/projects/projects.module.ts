@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ProjectsController } from './controllers/projects.controller';
-import { ProjectsService } from './services/projects.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Project, ProjectSchema } from './entities/project.entity';
-import { ProjectRepository } from './repositories/project.repository';
+import { ProjectsController } from './controllers/projects.controller.js';
+import { Project, ProjectSchema } from './entities/project.entity.js';
+import { ProjectRepository } from './repositories/project.repository.js';
+import { ProjectsService } from './services/projects.service.js';
 
 @Module({
   imports: [

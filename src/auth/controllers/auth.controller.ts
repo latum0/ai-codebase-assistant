@@ -22,13 +22,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response, CookieOptions } from 'express';
 import { Types } from 'mongoose';
-
-import { CreateUserDto } from '../dto/create-user.dto';
-import { UserResponseDto } from '../dto/user-response.dto';
-import { LoginDto } from '../dto/login.dto';
-import { AuthService } from '../services/auth.service';
-import { UserContext } from '../../utils/decorators/user-context';
-import { JwtGuard } from '../guards/jwt.guard';
+import { UserContext } from '../../utils/decorators/user-context.js';
+import { CreateUserDto } from '../dto/create-user.dto.js';
+import { LoginDto } from '../dto/login.dto.js';
+import { UserResponseDto } from '../dto/user-response.dto.js';
+import { JwtGuard } from '../guards/jwt.guard.js';
+import { AuthService } from '../services/auth.service.js';
 
 class AuthResponseDto extends OmitType(UserResponseDto, [
   'refreshToken',

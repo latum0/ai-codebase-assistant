@@ -1,17 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './controllers/auth.controller';
-import { AuthService } from './services/auth.service';
+
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './entities/user.entity';
-import { UserRepository } from './repositories/user.repository';
+
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { AuthController } from './controllers/auth.controller.js';
 import {
   RefreshToken,
   RefreshTokenSchema,
-} from './entities/refresh-token.entity';
-import { RefreshTokenRepository } from './repositories/refresh-token.repository';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
+} from './entities/refresh-token.entity.js';
+import { User, UserSchema } from './entities/user.entity.js';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
+import { UserRepository } from './repositories/user.repository.js';
+import { AuthService } from './services/auth.service.js';
+import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 @Module({
   imports: [

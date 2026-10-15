@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
-
-import { HealthModule } from './health/health.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { ProjectsModule } from './projects/projects.module';
+import { AuthModule } from './auth/auth.module.js';
+import { HealthModule } from './health/health.module.js';
+import { ProjectsModule } from './projects/projects.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [

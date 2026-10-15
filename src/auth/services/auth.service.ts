@@ -4,17 +4,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { UpdateAuthDto } from '../dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserDocument, UserRole } from '../entities/user.entity';
-import { UserRepository } from '../repositories/user.repository';
 import * as bcrypt from 'bcrypt';
-import { UserResponseDto } from '../dto/user-response.dto';
 import { ConfigService } from '@nestjs/config';
-import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { Types } from 'mongoose';
-import { LoginDto } from '../dto/login.dto';
+import { CreateUserDto } from '../dto/create-user.dto.js';
+import { LoginDto } from '../dto/login.dto.js';
+import { UserResponseDto } from '../dto/user-response.dto.js';
+import { UserRole, User } from '../entities/user.entity.js';
+import { RefreshTokenRepository } from '../repositories/refresh-token.repository.js';
+import { UserRepository } from '../repositories/user.repository.js';
 
 @Injectable()
 export class AuthService {

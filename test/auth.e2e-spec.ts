@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
-import { login } from './helpers/login';
 import request from 'supertest';
+import { AppModule } from '../src/app.module.js';
+import { login } from './helpers/login.js';
 
 describe('Auth E2E', () => {
   let app: INestApplication;
