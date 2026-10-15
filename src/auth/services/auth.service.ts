@@ -129,27 +129,39 @@ export class AuthService {
   async refreshToken(
     oldRefreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const token = await this.jwtService.verify(oldRefreshToken, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-    });
+    let payload: {
+      sub: string;
+      email: string;
+      role: UserRole;
+    };
 
-    const existingToken = await this.refreshTokenRepository.find({
-      token: oldRefreshToken,
-    });
-
-    if (!existingToken) {
+    try {
+      payload = this.jwtService.verify(oldRefreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
       throw new UnauthorizedException('Token invalid or expired.');
     }
 
-    await this.refreshTokenRepository.deleteMany({ token });
+    const storedToken = await this.refreshTokenRepository.findOneAndDelete({
+      token: oldRefreshToken,
+    });
 
-    const { accessToken, refreshToken } = await this.generateTokens(
-      token.sub,
-      token.email,
-      token.role,
-    );
+    if (!storedToken) {
+      throw new UnauthorizedException('Token invalid or expired.');
+    }
 
-    return { accessToken, refreshToken };
+    return this.generateTokens(payload.sub, payload.email, payload.role);
+  }
+
+  async logout(refreshToken?: string): Promise<void> {
+    if (!refreshToken) {
+      return;
+    }
+
+    await this.refreshTokenRepository.deleteMany({
+      token: refreshToken,
+    });
   }
 
   async getProfile(id: Types.ObjectId): Promise<User> {
@@ -157,7 +169,6 @@ export class AuthService {
     if (!profile) {
       throw new BadRequestException('Profile not found.');
     }
-
     return profile;
   }
 }

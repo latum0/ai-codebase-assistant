@@ -4,11 +4,13 @@ import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
 import { urlencoded } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix(process.env.API_PREFIX ?? 'api');
   app.use(helmet());
+  app.use(cookieParser());
   app.enableCors({
     origin: process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(',')
