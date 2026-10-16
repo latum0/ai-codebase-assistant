@@ -76,4 +76,15 @@ export class ProjectService {
 
     return project;
   }
+
+  async remove(id: Types.ObjectId, ownerId: Types.ObjectId): Promise<void> {
+    const project = await this.projectRepository.findOneAndDelete({
+      _id: id,
+      ownerId,
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found.');
+    }
+  }
 }

@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -45,5 +48,14 @@ export class ProjectController {
     @Body() dto: UpdateProjectDto,
   ) {
     return this.projectService.update(id, userId, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(
+    @UserContext() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+  ) {
+    return this.projectService.remove(id, userId);
   }
 }
