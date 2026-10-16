@@ -136,4 +136,68 @@ describe('Project E2E', () => {
         .expect(401);
     });
   });
+
+  describe('GET /projects', () => {
+    it('Should list only the projects of the current user', async () => {
+      const mine = await createProject(ownerToken, { name: 'Owner list' });
+
+      const ownerList = await request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(200);
+
+      expect(ownerList.body.map((p: { _id: string }) => p._id)).toContain(
+        mine._id,
+      );
+
+      const otherList = await request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(200);
+
+      expect(otherList.body.map((p: { _id: string }) => p._id)).not.toContain(
+        mine._id,
+      );
+    });
+
+    it('Should reject an unauthenticated request', async () => {
+      await request(app.getHttpServer()).get('/projects').expect(401);
+    });
+  });
+
+  describe('GET /projects/:id', () => {
+    it('Should return a project of the current user', async () => {
+      const project = await createProject(ownerToken);
+
+      const response = await request(app.getHttpServer())
+        .get(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(200);
+
+      expect(response.body._id).toBe(project._id);
+    });
+
+    it('Should reject an invalid id', async () => {
+      await request(app.getHttpServer())
+        .get('/projects/not-an-object-id')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(400);
+    });
+
+    it('Should return 404 for an unknown id', async () => {
+      await request(app.getHttpServer())
+        .get('/projects/665f1c2e8a1b2c3d4e5f6a7b')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(404);
+    });
+
+    it('Should return 404 for a project owned by someone else', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .get(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(404);
+    });
+  });
 });
