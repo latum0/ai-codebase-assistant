@@ -33,7 +33,7 @@ const ProjectIdParam = ApiParam({
 });
 
 @ApiTags('Projects')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT')
 @UseGuards(JwtGuard)
 @Controller('projects')
 export class ProjectController {
