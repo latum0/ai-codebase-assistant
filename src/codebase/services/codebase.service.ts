@@ -54,4 +54,23 @@ export class CodebaseService {
       revision: revision._id,
     });
   }
+
+  async removeRevision(
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<void> {
+    const revision = await this.findRevision(projectId, revisionId, userId);
+
+    await this.projectFileRepository.deleteMany({
+      revision: revision._id,
+    });
+
+    await this.projectRevisionRepository.findOneAndDelete({
+      _id: revision._id,
+      project: projectId,
+    });
+
+    // TODO: Delete the archive and extracted files from storage too.
+  }
 }

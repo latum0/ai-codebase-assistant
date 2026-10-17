@@ -1,4 +1,12 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { JwtGuard } from '../../auth/guards/jwt.guard.js';
@@ -38,5 +46,15 @@ export class CodebaseController {
       revisionId,
       userId,
     );
+  }
+
+  @Delete(':revisionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRevision(
+    @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,
+    @Param('revisionId', ParseObjectIdPipe) revisionId: Types.ObjectId,
+    @UserContext() userId: Types.ObjectId,
+  ): Promise<void> {
+    await this.codebaseService.removeRevision(projectId, revisionId, userId);
   }
 }
