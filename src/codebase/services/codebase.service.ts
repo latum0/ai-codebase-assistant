@@ -41,4 +41,17 @@ export class CodebaseService {
 
     return revision;
   }
+
+  async findRevisionFiles(
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ) {
+    // This also verifies project ownership and revision membership.
+    const revision = await this.findRevision(projectId, revisionId, userId);
+
+    return this.projectFileRepository.find({
+      revision: revision._id,
+    });
+  }
 }

@@ -26,4 +26,17 @@ export class CodebaseController {
   ) {
     return this.codebaseService.findRevision(projectId, revisionId, userId);
   }
+
+  @Get(':revisionId/files')
+  findRevisionFiles(
+    @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,
+    @Param('revisionId', ParseObjectIdPipe) revisionId: Types.ObjectId,
+    @UserContext() userId: Types.ObjectId,
+  ) {
+    return this.codebaseService.findRevisionFiles(
+      projectId,
+      revisionId,
+      userId,
+    );
+  }
 }
