@@ -73,4 +73,26 @@ export class CodebaseService {
 
     // TODO: Delete the archive and extracted files from storage too.
   }
+
+  async findRevisionFile(
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    fileId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ) {
+    // Verify ownership and ensure the revision belongs to the project.
+    const revision = await this.findRevision(projectId, revisionId, userId);
+
+    // Find the file only within this revision.
+    const file = await this.projectFileRepository.findOne({
+      _id: fileId,
+      revision: revision._id,
+    });
+
+    if (!file) {
+      throw new NotFoundException('Project file not found');
+    }
+
+    return file;
+  }
 }

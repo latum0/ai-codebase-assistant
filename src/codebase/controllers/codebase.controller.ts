@@ -57,4 +57,22 @@ export class CodebaseController {
   ): Promise<void> {
     await this.codebaseService.removeRevision(projectId, revisionId, userId);
   }
+
+  @Get(':revisionId/files/:fileId')
+  findRevisionFile(
+    @Param('projectId', ParseObjectIdPipe)
+    projectId: Types.ObjectId,
+    @Param('revisionId', ParseObjectIdPipe)
+    revisionId: Types.ObjectId,
+    @Param('fileId', ParseObjectIdPipe)
+    fileId: Types.ObjectId,
+    @UserContext() userId: Types.ObjectId,
+  ) {
+    return this.codebaseService.findRevisionFile(
+      projectId,
+      revisionId,
+      fileId,
+      userId,
+    );
+  }
 }
