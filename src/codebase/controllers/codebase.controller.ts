@@ -1,45 +1,29 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
+import { JwtGuard } from '../../auth/guards/jwt.guard.js';
+import { UserContext } from '../../utils/decorators/user-context.js';
 import { CodebaseService } from '../services/codebase.service.js';
-import { CreateCodebaseDto } from '../dto/create-codebase.dto.js';
-import { UpdateCodebaseDto } from '../dto/update-codebase.dto.js';
 
-@Controller('codebase')
+@Controller('projects/:projectId/revisions')
+@UseGuards(JwtGuard)
 export class CodebaseController {
   constructor(private readonly codebaseService: CodebaseService) {}
 
-  @Post()
-  create(@Body() createCodebaseDto: CreateCodebaseDto) {
-    return this.codebaseService.create(createCodebaseDto);
-  }
-
   @Get()
-  findAll() {
-    return this.codebaseService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.codebaseService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateCodebaseDto: UpdateCodebaseDto,
+  findRevisions(
+    @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,
+    @UserContext() userId: Types.ObjectId,
   ) {
-    return this.codebaseService.update(+id, updateCodebaseDto);
+    return this.codebaseService.findRevisions(projectId, userId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.codebaseService.remove(+id);
+  @Get(':revisionId')
+  findRevision(
+    @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,
+    @Param('revisionId', ParseObjectIdPipe) revisionId: Types.ObjectId,
+    @UserContext() userId: Types.ObjectId,
+  ) {
+    return this.codebaseService.findRevision(projectId, revisionId, userId);
   }
 }

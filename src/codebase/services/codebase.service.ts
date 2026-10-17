@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCodebaseDto } from '../dto/create-codebase.dto.js';
-import { UpdateCodebaseDto } from '../dto/update-codebase.dto.js';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { ProjectService } from '../../projects/services/project.service.js';
+import { ProjectFileRepository } from '../repositories/projectFile.repository.js';
+import { ProjectRevisionRepository } from '../repositories/projectRevision.entity.js';
 
 @Injectable()
 export class CodebaseService {
-  create(createCodebaseDto: CreateCodebaseDto) {
-    return 'This action adds a new codebase';
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly projectRevisionRepository: ProjectRevisionRepository,
+    private readonly projectFileRepository: ProjectFileRepository,
+  ) {}
+
+  async findRevisions(projectId: Types.ObjectId, userId: Types.ObjectId) {
+    // Verify that the project belongs to the current user.
+    await this.projectService.findOne(projectId, userId);
+
+    return this.projectRevisionRepository.find(
+      { project: projectId },
+      { sort: { versionNumber: -1 } },
+    );
   }
 
-  findAll() {
-    return `This action returns all codebase`;
-  }
+  async findRevision(
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ) {
+    // Verify project ownership first.
+    await this.projectService.findOne(projectId, userId);
 
-  findOne(id: number) {
-    return `This action returns a #${id} codebase`;
-  }
+    const revision = await this.projectRevisionRepository.findOne({
+      _id: revisionId,
+      project: projectId,
+    });
 
-  update(id: number, updateCodebaseDto: UpdateCodebaseDto) {
-    return `This action updates a #${id} codebase`;
-  }
+    if (!revision) {
+      throw new NotFoundException('Project revision not found');
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} codebase`;
+    return revision;
   }
 }

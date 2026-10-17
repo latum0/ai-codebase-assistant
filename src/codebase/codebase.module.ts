@@ -12,6 +12,8 @@ import {
   ProjectRevision,
   ProjectRevisionSchema,
 } from './entities/projectRevision.entity.js';
+import { ArchiveService } from './services/archive.service.js';
+import { StorageService } from './services/storage.service.js';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import {
   controllers: [CodebaseController],
   providers: [
     CodebaseService,
+    ArchiveService,
+    StorageService,
     ProjectFileRepository,
     ProjectRevisionRepository,
   ],
