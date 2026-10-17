@@ -200,4 +200,102 @@ describe('Project E2E', () => {
         .expect(404);
     });
   });
+
+  describe('PATCH /projects/:id', () => {
+    it('Should update the provided fields only', async () => {
+      const project = await createProject(ownerToken);
+
+      const response = await request(app.getHttpServer())
+        .patch(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ name: 'Renamed project' })
+        .expect(200);
+
+      expect(response.body.name).toBe('Renamed project');
+      expect(response.body.description).toBe(project.description);
+    });
+
+    it('Should clear the repository url when switching to upload', async () => {
+      const project = await createProject(ownerToken, {
+        sourceType: 'github',
+        repositoryUrl: 'https://github.com/user/repo',
+      });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ sourceType: 'upload' })
+        .expect(200);
+
+      expect(response.body.sourceType).toBe('upload');
+      expect(response.body.repositoryUrl).toBeUndefined();
+    });
+
+    it('Should reject switching to github without a repository url', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .patch(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ sourceType: 'github' })
+        .expect(400);
+    });
+
+    it('Should reject an attempt to change the owner', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .patch(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ ownerId: '665f1c2e8a1b2c3d4e5f6a00' })
+        .expect(400);
+    });
+
+    it('Should return 404 for a project owned by someone else', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .patch(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({ name: 'Hijacked' })
+        .expect(404);
+    });
+  });
+
+  describe('DELETE /projects/:id', () => {
+    it('Should delete a project', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .delete(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(204);
+
+      await request(app.getHttpServer())
+        .get(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(404);
+    });
+
+    it('Should return 404 for a project owned by someone else', async () => {
+      const project = await createProject(ownerToken);
+
+      await request(app.getHttpServer())
+        .delete(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(404);
+
+      // still there for its owner
+      await request(app.getHttpServer())
+        .get(`/projects/${project._id}`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(200);
+    });
+
+    it('Should reject an unauthenticated request', async () => {
+      await request(app.getHttpServer())
+        .delete('/projects/665f1c2e8a1b2c3d4e5f6a7b')
+        .expect(401);
+    });
+  });
 });
