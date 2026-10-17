@@ -3,12 +3,6 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type RefreshTokenDocument = HydratedDocument<RefreshToken>;
 
-export enum UserType {
-  ADMIN = 'ADMIN',
-  PARIN = 'PARIN',
-  COMPANY = 'COMPANY',
-}
-
 @Schema({ timestamps: true })
 export class RefreshToken {
   @Prop({ type: Types.ObjectId, required: true, ref: 'User' })
