@@ -138,7 +138,8 @@ export class AuthService {
       payload = this.jwtService.verify(oldRefreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
-    } catch {
+    } catch (error) {
+      console.error('Refresh JWT verification failed:', error);
       throw new UnauthorizedException('Token invalid or expired.');
     }
 
@@ -147,6 +148,7 @@ export class AuthService {
     });
 
     if (!storedToken) {
+      console.error('Refresh token not found in database');
       throw new UnauthorizedException('Token invalid or expired.');
     }
 

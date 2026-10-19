@@ -1,14 +1,15 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
-export const createProject = async (
+export const createEntity = async (
   token: string,
   app: INestApplication,
-  createdIds: string[] | null,
+  path: string,
+  createdIds: string[],
   overrides: Record<string, unknown> = {},
 ) => {
   const response = await request(app.getHttpServer())
-    .post('/projects')
+    .post(`/${path}`)
     .set('Authorization', `Bearer ${token}`)
     .send({
       name: 'E2E project',
@@ -18,6 +19,6 @@ export const createProject = async (
     })
     .expect(201);
 
-  (createdIds as string[]).push(response.body._id);
+  createdIds.push(response.body._id);
   return response.body;
 };

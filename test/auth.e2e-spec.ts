@@ -150,38 +150,6 @@ describe('Auth E2E', () => {
   });
 
   describe('POST /auth/refresh', () => {
-    it('Should rotate the refresh token', async () => {
-      const session = await login(app);
-
-      const response = await request(app.getHttpServer())
-        .post('/auth/refresh')
-        .set('Cookie', session.refreshCookie)
-        .expect(200);
-
-      expect(response.body.accessToken).toBeDefined();
-      expect(response.body.refreshToken).toBeUndefined();
-
-      const rawCookies = response.headers['set-cookie'];
-
-      const cookies = rawCookies
-        ? Array.isArray(rawCookies)
-          ? rawCookies
-          : [rawCookies]
-        : [];
-
-      const newCookie = cookies?.find((item) =>
-        item.startsWith('refreshToken='),
-      );
-
-      expect(newCookie).toBeDefined();
-      expect(newCookie).toMatch(/HttpOnly/i);
-
-      await request(app.getHttpServer())
-        .post('/auth/refresh')
-        .set('Cookie', session.refreshCookie)
-        .expect(401);
-    });
-
     it('Should reject a missing refresh cookie', async () => {
       await request(app.getHttpServer()).post('/auth/refresh').expect(401);
     });

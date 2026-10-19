@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
 import { login } from './helpers/login.js';
-import { createProject } from './helpers/createEntities.js';
+import { createEntity } from './helpers/createEntities.js';
 
 describe('Project E2E', () => {
   let app: INestApplication;
@@ -54,7 +54,12 @@ describe('Project E2E', () => {
 
   describe('POST /projects', () => {
     it('Should create an upload project', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       expect(project._id).toBeDefined();
       expect(project.ownerId).toBeDefined();
@@ -65,20 +70,32 @@ describe('Project E2E', () => {
     });
 
     it('Should create a github project with a repository url', async () => {
-      const project = await createProject(ownerToken, app, createdIds, {
-        sourceType: 'github',
-        repositoryUrl: 'https://github.com/user/repo',
-      });
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+        {
+          sourceType: 'github',
+          repositoryUrl: 'https://github.com/user/repo',
+        },
+      );
 
       expect(project.sourceType).toBe('github');
       expect(project.repositoryUrl).toBe('https://github.com/user/repo');
     });
 
     it('Should ignore the repository url of an upload project', async () => {
-      const project = await createProject(ownerToken, app, createdIds, {
-        sourceType: 'upload',
-        repositoryUrl: 'https://github.com/user/repo',
-      });
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+        {
+          sourceType: 'upload',
+          repositoryUrl: 'https://github.com/user/repo',
+        },
+      );
 
       expect(project.repositoryUrl).toBeUndefined();
     });
@@ -121,7 +138,7 @@ describe('Project E2E', () => {
 
   describe('GET /projects', () => {
     it('Should list only the projects of the current user', async () => {
-      const mine = await createProject(ownerToken, app, createdIds, {
+      const mine = await createEntity(ownerToken, app, 'projects', createdIds, {
         name: 'Owner list',
       });
 
@@ -151,7 +168,12 @@ describe('Project E2E', () => {
 
   describe('GET /projects/:id', () => {
     it('Should return a project of the current user', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       const response = await request(app.getHttpServer())
         .get(`/projects/${project._id}`)
@@ -176,7 +198,12 @@ describe('Project E2E', () => {
     });
 
     it('Should return 404 for a project owned by someone else', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .get(`/projects/${project._id}`)
@@ -187,7 +214,12 @@ describe('Project E2E', () => {
 
   describe('PATCH /projects/:id', () => {
     it('Should update the provided fields only', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       const response = await request(app.getHttpServer())
         .patch(`/projects/${project._id}`)
@@ -200,10 +232,16 @@ describe('Project E2E', () => {
     });
 
     it('Should clear the repository url when switching to upload', async () => {
-      const project = await createProject(ownerToken, app, createdIds, {
-        sourceType: 'github',
-        repositoryUrl: 'https://github.com/user/repo',
-      });
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+        {
+          sourceType: 'github',
+          repositoryUrl: 'https://github.com/user/repo',
+        },
+      );
 
       const response = await request(app.getHttpServer())
         .patch(`/projects/${project._id}`)
@@ -216,7 +254,12 @@ describe('Project E2E', () => {
     });
 
     it('Should reject switching to github without a repository url', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .patch(`/projects/${project._id}`)
@@ -226,7 +269,12 @@ describe('Project E2E', () => {
     });
 
     it('Should reject an attempt to change the owner', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .patch(`/projects/${project._id}`)
@@ -236,7 +284,12 @@ describe('Project E2E', () => {
     });
 
     it('Should return 404 for a project owned by someone else', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .patch(`/projects/${project._id}`)
@@ -248,7 +301,12 @@ describe('Project E2E', () => {
 
   describe('DELETE /projects/:id', () => {
     it('Should delete a project', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .delete(`/projects/${project._id}`)
@@ -262,7 +320,12 @@ describe('Project E2E', () => {
     });
 
     it('Should return 404 for a project owned by someone else', async () => {
-      const project = await createProject(ownerToken, app, createdIds);
+      const project = await createEntity(
+        ownerToken,
+        app,
+        'projects',
+        createdIds,
+      );
 
       await request(app.getHttpServer())
         .delete(`/projects/${project._id}`)

@@ -15,18 +15,24 @@ export const login = async (app: INestApplication): Promise<LoginResult> => {
     })
     .expect(200);
 
-  const cookies = result.headers['set-cookie'];
+  const rawCookies = result.headers['set-cookie'];
 
-  const refreshCookie = (
-    Array.isArray(cookies) ? cookies : cookies ? [cookies] : []
-  ).find((cookie) => cookie.startsWith('refreshToken='));
+  const cookies = Array.isArray(rawCookies)
+    ? rawCookies
+    : rawCookies
+      ? [rawCookies]
+      : [];
 
-  if (!result.body.accessToken || !refreshCookie) {
-    throw new Error('Login did not return an access token and refresh cookie.');
+  const refreshCookie = cookies
+    .find((cookie) => cookie.startsWith('refreshToken='))
+    ?.split(';', 1)[0];
+
+  if (!refreshCookie) {
+    throw new Error('Refresh token cookie was not set during login');
   }
 
   return {
     accessToken: result.body.accessToken,
-    refreshCookie: refreshCookie.split(';', 1)[0],
+    refreshCookie,
   };
 };
