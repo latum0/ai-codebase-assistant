@@ -11,4 +11,6 @@ export class ProjectFileRepository extends EntityRepository<ProjectFile> {
   ) {
     super(projectFileModel);
   }
+
+  async bulkCreate(files: any) {}
 }

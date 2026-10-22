@@ -87,4 +87,6 @@ export class ProjectService {
       throw new NotFoundException('Project not found.');
     }
   }
+
+  async ensureOwnedProject(userId: Types.ObjectId, projectId: Types.ObjectId) {}
 }

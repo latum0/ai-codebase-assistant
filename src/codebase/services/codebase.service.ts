@@ -1,8 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { ProjectService } from '../../projects/services/project.service.js';
 import { ProjectFileRepository } from '../repositories/projectFile.repository.js';
 import { ProjectRevisionRepository } from '../repositories/projectRevision.entity.js';
+import { createHash } from 'crypto';
+import { ArchiveService } from './archive.service.js';
+import { StorageService } from './storage.service.js';
+import { readFile } from 'node:fs/promises';
+import { ProjectRevisionStatus } from '../entities/projectRevision.entity.js';
 
 @Injectable()
 export class CodebaseService {
@@ -10,7 +19,86 @@ export class CodebaseService {
     private readonly projectService: ProjectService,
     private readonly projectRevisionRepository: ProjectRevisionRepository,
     private readonly projectFileRepository: ProjectFileRepository,
+    private readonly archiveService: ArchiveService,
+    private readonly storageService: StorageService,
   ) {}
+
+  async uploadZip(
+    userId: Types.ObjectId,
+    file: Express.Multer.File,
+    projectId: Types.ObjectId,
+  ) {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('A non-empty ZIP file is required');
+    }
+
+    // ensure the project belongs to the user
+    //TODO:change type later;
+    const project: any = await this.projectService.ensureOwnedProject(
+      userId,
+      projectId,
+    );
+
+    const versionNumber =
+      (await this.projectRevisionRepository.getNextVersionNumber(
+        project._id,
+      )) as unknown as number;
+
+    const archiveHash = createHash('sha256').update(file.buffer).digest('hex');
+
+    const revisionId = new Types.ObjectId();
+
+    const storageRoot = `projects/${project._id}/revisions/${revisionId.toString()}`;
+
+    const archiveStorageKey = `${storageRoot}/archive.zip`;
+    const sourceStoragePrefix = `${storageRoot}/files`;
+
+    const extractedFiles = this.archiveService.extractAndScan(file.buffer);
+
+    try {
+      await this.projectRevisionRepository.create({
+        _id: revisionId,
+        project: projectId,
+        versionNumber,
+        originalFileName: file.originalname,
+        archiveStorageKey,
+        archiveHash,
+        status: ProjectRevisionStatus.PROCESSING,
+      });
+
+      await this.storageService.saveBuffer(archiveStorageKey, file.buffer);
+
+      const fileRecords = [];
+
+      for (const file of extractedFiles.files) {
+        const storageKey = `${sourceStoragePrefix}/${file.relatePath}`;
+        const content = await readFile(file.absolutePath);
+
+        await this.storageService.saveBuffer(storageKey, content);
+
+        fileRecords.push({
+          revision: revisionId,
+          path: file.relativePath,
+          extension: file.extension,
+          sizeBytes: file.sizeBytes,
+          contentHash: file.contentHash,
+          isIndexable: file.isIndexable,
+        });
+      }
+
+      await this.projectFileRepository.insertMany(fileRecords);
+      return await this.projectRevisionRepository.findOneAndUpdate(
+        { _id: revisionId },
+        {
+          status: ProjectRevisionStatus.UPLOADED,
+          filecount: fileRecords.length,
+          totalSizeBytes: extractedFiles.totalSizeBytes,
+        },
+      );
+    } catch (err) {
+      throw err;
+    }
+  }
 
   async findRevisions(projectId: Types.ObjectId, userId: Types.ObjectId) {
     // Verify that the project belongs to the current user.

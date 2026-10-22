@@ -5,7 +5,10 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import {
@@ -19,6 +22,8 @@ import { Types } from 'mongoose';
 import { JwtGuard } from '../../auth/guards/jwt.guard.js';
 import { UserContext } from '../../utils/decorators/user-context.js';
 import { CodebaseService } from '../services/codebase.service.js';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from '../../utils/multer.config.js';
 
 const ProjectIdParam = ApiParam({
   name: 'projectId',
@@ -44,6 +49,16 @@ const FileIdParam = ApiParam({
 @Controller('codebase/projects/:projectId/revisions')
 export class CodebaseController {
   constructor(private readonly codebaseService: CodebaseService) {}
+
+  @Post()
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  uploadZip(
+    @UploadedFile() file: Express.Multer.File,
+    @UserContext() userId: Types.ObjectId,
+    @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,
+  ) {
+    return this.codebaseService.uploadZip(userId, file, projectId);
+  }
 
   @Get()
   @ProjectIdParam
