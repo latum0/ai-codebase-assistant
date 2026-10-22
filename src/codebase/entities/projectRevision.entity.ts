@@ -45,3 +45,8 @@ export class ProjectRevision {
 
 export const ProjectRevisionSchema =
   SchemaFactory.createForClass(ProjectRevision);
+
+ProjectRevisionSchema.index(
+  { project: 1, versionNumber: 1 },
+  { unique: true },
+);

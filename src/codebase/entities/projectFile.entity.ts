@@ -3,7 +3,12 @@ import { Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class ProjectFile {
-  @Prop({ type: Types.ObjectId, required: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'ProjectRevision',
+    required: true,
+    index: true,
+  })
   revision!: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true })
@@ -23,3 +28,5 @@ export class ProjectFile {
 }
 
 export const ProjectFileSchema = SchemaFactory.createForClass(ProjectFile);
+
+ProjectFileSchema.index({ revision: 1, path: 1 }, { unique: true });

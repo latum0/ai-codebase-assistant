@@ -41,7 +41,7 @@ const FileIdParam = ApiParam({
 @ApiTags('Codebase')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtGuard)
-@Controller('projects/:projectId/revisions')
+@Controller('codebase/projects/:projectId/revisions')
 export class CodebaseController {
   constructor(private readonly codebaseService: CodebaseService) {}
 
