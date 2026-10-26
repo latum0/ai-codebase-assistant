@@ -8,10 +8,18 @@ import { Model, Types } from 'mongoose';
 export class ProjectRevisionRepository extends EntityRepository<ProjectRevision> {
   constructor(
     @InjectModel(ProjectRevision.name)
-    projectRevisionModel: Model<ProjectRevision>,
+    private readonly projectRevisionModel: Model<ProjectRevision>,
   ) {
     super(projectRevisionModel);
   }
+  async getNextVersionNumber(projectId: Types.ObjectId): Promise<number> {
+    const latestRevision = await this.projectRevisionModel
+      .findOne({ project: projectId })
+      .sort({ versionNumber: -1 })
+      .select({ versionNumber: 1 })
+      .lean()
+      .exec();
 
-  async getNextVersionNumber(projectId: Types.ObjectId) {}
+    return (latestRevision?.versionNumber ?? 0) + 1;
+  }
 }

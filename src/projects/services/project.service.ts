@@ -88,5 +88,16 @@ export class ProjectService {
     }
   }
 
-  async ensureOwnedProject(userId: Types.ObjectId, projectId: Types.ObjectId) {}
+  async ensureOwnedProject(userId: Types.ObjectId, projectId: Types.ObjectId) {
+    const project = await this.projectRepository.findOne({
+      _id: projectId,
+      ownerId: userId,
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return project;
+  }
 }
