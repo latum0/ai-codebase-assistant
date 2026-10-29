@@ -244,4 +244,70 @@ describe('CodebaseService.uploadZip', () => {
     expect(archiveService.extractAndScan).not.toHaveBeenCalled();
     expect(revisionRepository.create).not.toHaveBeenCalled();
   });
+
+  it('stops when the user does not own the project', async () => {
+    projectService.ensureOwnedProject.mockRejectedValueOnce(
+      new Error('Project not found or access denied'),
+    );
+
+    await expect(service.uploadZip(userId, file, projectId)).rejects.toThrow(
+      'Project not found or access denied',
+    );
+
+    expect(archiveService.extractAndScan).not.toHaveBeenCalled();
+    expect(revisionRepository.create).not.toHaveBeenCalled();
+    expect(storageService.saveBuffer).not.toHaveBeenCalled();
+  });
+
+  it('cleans up after storage fails', async () => {
+    storageService.saveBuffer.mockRejectedValueOnce(
+      new Error('Storage unavailable'),
+    );
+
+    await expect(service.uploadZip(userId, file, projectId)).rejects.toThrow(
+      'Storage unavailable',
+    );
+
+    expect(storageService.deletePrefix).toHaveBeenCalled();
+
+    expect(revisionRepository.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: expect.any(Types.ObjectId) },
+      {
+        $set: {
+          status: ProjectRevisionStatus.FAILED,
+        },
+      },
+    );
+
+    expect(archiveService.cleanup).toHaveBeenCalledWith(
+      extractedArchive.tempDirectory,
+    );
+  });
+
+  it('marks the revision failed and cleans up if the transaction fails', async () => {
+    session.withTransaction.mockRejectedValueOnce(
+      new Error('Database transaction failed'),
+    );
+
+    await expect(service.uploadZip(userId, file, projectId)).rejects.toThrow(
+      'Database transaction failed',
+    );
+
+    expect(storageService.deletePrefix).toHaveBeenCalled();
+
+    expect(revisionRepository.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: expect.any(Types.ObjectId) },
+      {
+        $set: {
+          status: ProjectRevisionStatus.FAILED,
+        },
+      },
+    );
+
+    expect(archiveService.cleanup).toHaveBeenCalledWith(
+      extractedArchive.tempDirectory,
+    );
+
+    expect(session.endSession).toHaveBeenCalled();
+  });
 });
