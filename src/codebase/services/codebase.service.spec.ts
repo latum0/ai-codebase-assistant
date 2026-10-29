@@ -186,4 +186,46 @@ describe('CodebaseService.uploadZip', () => {
       });
     }
   });
+
+  it('uploads a ZIP and persists its revision and extracted file records', async () => {
+    await service.uploadZip(userId, file, projectId);
+
+    expect(projectService.ensureOwnedProject).toHaveBeenCalledWith(
+      userId,
+      projectId,
+    );
+
+    expect(archiveService.extractAndScan).toHaveBeenCalledWith(file.buffer);
+
+    expect(revisionRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: expect.any(Types.ObjectId),
+        project: projectId,
+        versionNumber: 1,
+        originalFileName: file.originalname,
+        status: ProjectRevisionStatus.PROCESSING,
+      }),
+    );
+
+    expect(storageService.saveBuffer).toHaveBeenCalled();
+
+    expect(fileRepository.insertMany).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          revision: expect.any(Types.ObjectId),
+          path: 'src/main.ts',
+          contentHash: 'test-content-hash',
+          isIndexable: true,
+        }),
+      ]),
+      { session },
+    );
+
+    expect(session.withTransaction).toHaveBeenCalled();
+    expect(session.endSession).toHaveBeenCalled();
+
+    expect(archiveService.cleanup).toHaveBeenCalledWith(
+      extractedArchive.tempDirectory,
+    );
+  });
 });
