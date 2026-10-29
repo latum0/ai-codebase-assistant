@@ -228,4 +228,20 @@ describe('CodebaseService.uploadZip', () => {
       extractedArchive.tempDirectory,
     );
   });
+
+  it('rejects an empty ZIP upload', async () => {
+    const emptyFile = {
+      ...file,
+      buffer: Buffer.alloc(0),
+      size: 0,
+    };
+
+    await expect(
+      service.uploadZip(userId, emptyFile, projectId),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(projectService.ensureOwnedProject).not.toHaveBeenCalled();
+    expect(archiveService.extractAndScan).not.toHaveBeenCalled();
+    expect(revisionRepository.create).not.toHaveBeenCalled();
+  });
 });
