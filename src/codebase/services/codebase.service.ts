@@ -5,7 +5,8 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Connection, Types } from 'mongoose';
+import type { Connection } from 'mongoose';
+import { Types } from 'mongoose';
 import { ProjectService } from '../../projects/services/project.service.js';
 import { ProjectFileRepository } from '../repositories/projectFile.repository.js';
 import { ProjectRevisionRepository } from '../repositories/projectRevision.entity.js';
