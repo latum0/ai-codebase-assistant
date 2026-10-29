@@ -10,6 +10,8 @@ export enum ProjectRevisionStatus {
 
 @Schema({ timestamps: true })
 export class ProjectRevision {
+  _id!: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Project', required: true })
   project!: Types.ObjectId;
 
@@ -46,7 +48,4 @@ export class ProjectRevision {
 export const ProjectRevisionSchema =
   SchemaFactory.createForClass(ProjectRevision);
 
-ProjectRevisionSchema.index(
-  { project: 1, versionNumber: 1 },
-  { unique: true },
-);
+ProjectRevisionSchema.index({ project: 1, versionNumber: 1 }, { unique: true });
