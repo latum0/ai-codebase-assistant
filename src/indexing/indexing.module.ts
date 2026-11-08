@@ -2,19 +2,19 @@ import { Module } from '@nestjs/common';
 import { IndexingService } from './services/indexing.service.js';
 import { IndexingController } from './controllers/indexing.controller.js';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Indexing, IndexingSchema } from './entities/indexing.entity.js';
-import { IndexingRepository } from './repositories/indexing.repository.js';
+import { IndexingRun, IndexingRunSchema } from './entities/indexing.entity.js';
+import { IndexingRunRepository } from './repositories/indexing.repository.js';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       {
-        name: Indexing.name,
-        schema: IndexingSchema,
+        name: IndexingRun.name,
+        schema: IndexingRunSchema,
       },
     ]),
   ],
   controllers: [IndexingController],
-  providers: [IndexingService, IndexingRepository],
+  providers: [IndexingService, IndexingRunRepository],
 })
 export class IndexingModule {}

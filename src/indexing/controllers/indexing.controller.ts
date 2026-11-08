@@ -1,45 +1,30 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
-import { CreateIndexingDto } from '../dto/create-indexing.dto.js';
-import { UpdateIndexingDto } from '../dto/update-indexing.dto.js';
+import { Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
+
+import { JwtGuard } from '../../auth/guards/jwt.guard.js';
+import { UserContext } from '../../utils/decorators/user-context.js';
 import { IndexingService } from '../services/indexing.service.js';
 
-@Controller('indexing')
+@UseGuards(JwtGuard)
+@Controller('codebase/projects/:projectId/revisions/:revisionId/indexing-runs')
 export class IndexingController {
   constructor(private readonly indexingService: IndexingService) {}
 
   @Post()
-  create(@Body() createIndexingDto: CreateIndexingDto) {
-    return this.indexingService.create(createIndexingDto);
-  }
+  createIndexingRun(
+    @Param('projectId', ParseObjectIdPipe)
+    projectId: Types.ObjectId,
 
-  @Get()
-  findAll() {
-    return this.indexingService.findAll();
-  }
+    @Param('revisionId', ParseObjectIdPipe)
+    revisionId: Types.ObjectId,
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.indexingService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateIndexingDto: UpdateIndexingDto,
+    @UserContext() userId: Types.ObjectId,
   ) {
-    return this.indexingService.update(+id, updateIndexingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.indexingService.remove(+id);
+    return this.indexingService.createIndexingRun(
+      userId,
+      projectId,
+      revisionId,
+    );
   }
 }
