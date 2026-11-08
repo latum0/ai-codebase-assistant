@@ -186,7 +186,6 @@ export class CodebaseController {
   @Delete(':revisionId')
   @ProjectIdParam
   @RevisionIdParam
-  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a project revision' })
   @ApiResponse({
     status: 204,

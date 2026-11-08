@@ -7,6 +7,7 @@ import { HealthModule } from './health/health.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { UsersModule } from './users/users.module.js';
 import { CodebaseModule } from './codebase/codebase.module.js';
+import { IndexingModule } from './indexing/indexing.module.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CodebaseModule } from './codebase/codebase.module.js';
     AuthModule,
     ProjectsModule,
     CodebaseModule,
+    IndexingModule,
   ],
 })
 export class AppModule {}
