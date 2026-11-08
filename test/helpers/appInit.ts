@@ -7,15 +7,16 @@ import cookieParser from 'cookie-parser';
 export const appInit = async (): Promise<{
   app: INestApplication;
   accessToken: string;
+  refreshCookie: string;
 }> => {
-  let app: INestApplication;
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
 
-  app = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication();
 
   app.use(cookieParser());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,18 +24,10 @@ export const appInit = async (): Promise<{
       transform: true,
     }),
   );
-  app.use((req: any, _res: any, next: any) => {
-    if (req.url === '/auth/refresh') {
-      console.log('Incoming Cookie header:', req.headers.cookie);
-      console.log('Parsed cookies:', req.cookies);
-    }
-
-    next();
-  });
 
   await app.init();
 
-  const { accessToken } = await login(app);
+  const { accessToken, refreshCookie } = await login(app);
 
-  return { app, accessToken };
+  return { app, accessToken, refreshCookie };
 };

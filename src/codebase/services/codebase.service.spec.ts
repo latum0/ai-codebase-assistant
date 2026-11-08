@@ -7,7 +7,7 @@ import { Types } from 'mongoose';
 import { ProjectService } from '../../projects/services/project.service.js';
 import { ProjectRevisionStatus } from '../entities/projectRevision.entity.js';
 import { ProjectFileRepository } from '../repositories/projectFile.repository.js';
-import { ProjectRevisionRepository } from '../repositories/projectRevision.entity.js';
+import { ProjectRevisionRepository } from '../repositories/projectRevision.repository.js';
 import { ArchiveService } from './archive.service.js';
 import { CodebaseService } from './codebase.service.js';
 import { StorageService } from './storage.service.js';

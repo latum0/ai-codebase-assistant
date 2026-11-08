@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { CodebaseService } from './services/codebase.service.js';
 import { CodebaseController } from './controllers/codebase.controller.js';
 import { ProjectFileRepository } from './repositories/projectFile.repository.js';
-import { ProjectRevisionRepository } from './repositories/projectRevision.entity.js';
+import { ProjectRevisionRepository } from './repositories/projectRevision.repository.js';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProjectFile,

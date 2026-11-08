@@ -4,15 +4,16 @@ import { extname } from 'node:path';
 export const multerConfig = {
   limits: {
     fileSize: 50 * 1024 * 1024,
-    file: 1,
+    files: 1,
   },
-  filterFile: (_req: any, file: any, callback: any) => {
-    if (extname(file.originalName).toLowerCase() !== '.zip') {
+  fileFilter: (_req: any, file: any, callback: any) => {
+    if (extname(file.originalname).toLowerCase() !== '.zip') {
       return callback(
         new BadRequestException('Only ZIP files are accepted'),
         false,
       );
     }
+
     callback(null, true);
   },
 };

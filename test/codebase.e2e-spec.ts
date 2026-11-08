@@ -1,20 +1,58 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { appInit } from './helpers/appInit.js';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Types } from 'mongoose';
+
+import { appInit } from './helpers/appInit.js';
 import { createEntity } from './helpers/createEntities.js';
+import { uploadRevision } from './helpers/uploadRevision.js';
 
 describe('Codebase E2E', () => {
   let app: INestApplication;
   let accessToken: string;
-  let createdProjectIds: string[] = [];
-  let createdRevisionIds: string[] = [];
+
   let projectId: string;
   let revisionId: string;
 
+  const createdProjectIds: string[] = [];
+  const createdRevisionIds: string[] = [];
+
+  let storageDir: string;
+  const previousStorageDir = process.env.CODEBASE_STORAGE_DIR;
+
+  const baseUrl = () => `/codebase/projects/${projectId}/revisions`;
+
+  const authRequest = () => ({
+    get: (path: string) =>
+      request(app.getHttpServer())
+        .get(path)
+        .set('Authorization', `Bearer ${accessToken}`),
+
+    post: (path: string) =>
+      request(app.getHttpServer())
+        .post(path)
+        .set('Authorization', `Bearer ${accessToken}`),
+
+    delete: (path: string) =>
+      request(app.getHttpServer())
+        .delete(path)
+        .set('Authorization', `Bearer ${accessToken}`),
+  });
+
   beforeAll(async () => {
+    // Isolate files created by StorageService during this test run.
+    storageDir = await mkdtemp(join(tmpdir(), 'codebase-e2e-storage-'));
+
+    process.env.CODEBASE_STORAGE_DIR = storageDir;
+
     const session = await appInit();
+
     app = session.app;
     accessToken = session.accessToken;
+
+    // Create the project first.
     const project = await createEntity(
       accessToken,
       app,
@@ -22,22 +60,138 @@ describe('Codebase E2E', () => {
       createdProjectIds,
     );
 
-    const revision = await createEntity(
+    projectId = project._id.toString();
+
+    // Upload an initial revision for GET/DELETE tests.
+    const revision = await uploadRevision(
       accessToken,
       app,
-      `projects/${projectId}/revisions`,
+      projectId,
       createdRevisionIds,
     );
+
     revisionId = revision._id.toString();
-    projectId = project._id.toString();
   });
 
   afterAll(async () => {
-    createdProjectIds.map(async (id) => {
-      await request(app.getHttpServer()).delete(
-        `/projects/${projectId}/revisions/${revisionId}`,
+    try {
+      if (!app) return;
+
+      // Delete revisions before deleting their project.
+      for (const id of createdRevisionIds) {
+        await authRequest().delete(`${baseUrl()}/${id}`).expect(204);
+      }
+
+      for (const id of createdProjectIds) {
+        await authRequest().delete(`/projects/${id}`).expect(204);
+      }
+    } finally {
+      await app?.close();
+
+      // Remove files even though removeRevision currently
+      // does not delete its storage directory.
+      if (storageDir) {
+        await rm(storageDir, {
+          recursive: true,
+          force: true,
+        });
+      }
+
+      if (previousStorageDir === undefined) {
+        delete process.env.CODEBASE_STORAGE_DIR;
+      } else {
+        process.env.CODEBASE_STORAGE_DIR = previousStorageDir;
+      }
+    }
+  });
+
+  describe('POST /revisions', () => {
+    it('should upload a ZIP and create a revision', async () => {
+      const revision = await uploadRevision(
+        accessToken,
+        app,
+        projectId,
+        createdRevisionIds,
       );
+
+      expect(revision).toMatchObject({
+        status: 'UPLOADED',
+        fileCount: 2,
+        originalFileName: 'test-project.zip',
+      });
+
+      expect(revision._id).toBeDefined();
     });
-    await app.close();
+
+    it('should reject an upload without a file', async () => {
+      await authRequest().post(baseUrl()).expect(400);
+    });
+
+    it('should reject a file with an invalid extension', async () => {
+      await authRequest()
+        .post(baseUrl())
+        .attach('file', Buffer.from('not a zip'), {
+          filename: 'project.txt',
+          contentType: 'text/plain',
+        })
+        .expect(400);
+    });
+
+    it('should reject an invalid ZIP archive', async () => {
+      await authRequest()
+        .post(baseUrl())
+        .attach('file', Buffer.from('invalid zip data'), {
+          filename: 'invalid.zip',
+          contentType: 'application/zip',
+        })
+        .expect(400);
+    });
+  });
+
+  describe('GET /revisions', () => {
+    it('should return project revisions', async () => {
+      const response = await authRequest().get(baseUrl()).expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+
+      expect(
+        response.body.some((revision: any) => revision._id === revisionId),
+      ).toBe(true);
+    });
+
+    it('should reject an invalid project ID', async () => {
+      await authRequest()
+        .get('/codebase/projects/invalid-id/revisions')
+        .expect(400);
+    });
+
+    it('should return 404 when the project does not exist', async () => {
+      const unknownProjectId = new Types.ObjectId().toString();
+
+      await authRequest()
+        .get(`/codebase/projects/${unknownProjectId}/revisions`)
+        .expect(404);
+    });
+  });
+
+  describe('GET /revisions/:revisionId', () => {
+    it('should return revision details', async () => {
+      const response = await authRequest()
+        .get(`${baseUrl()}/${revisionId}`)
+        .expect(200);
+
+      expect(response.body._id).toBe(revisionId);
+      expect(response.body.status).toBe('UPLOADED');
+    });
+
+    it('should reject an invalid revision ID', async () => {
+      await authRequest().get(`${baseUrl()}/invalid-id`).expect(400);
+    });
+
+    it('should return 404 when the revision does not exist', async () => {
+      const unknownRevisionId = new Types.ObjectId().toString();
+
+      await authRequest().get(`${baseUrl()}/${unknownRevisionId}`).expect(404);
+    });
   });
 });

@@ -9,7 +9,7 @@ import type { Connection } from 'mongoose';
 import { Types } from 'mongoose';
 import { ProjectService } from '../../projects/services/project.service.js';
 import { ProjectFileRepository } from '../repositories/projectFile.repository.js';
-import { ProjectRevisionRepository } from '../repositories/projectRevision.entity.js';
+import { ProjectRevisionRepository } from '../repositories/projectRevision.repository.js';
 import { createHash } from 'crypto';
 import { ArchiveService, ExtractedArchive } from './archive.service.js';
 import { StorageService } from './storage.service.js';
@@ -305,6 +305,10 @@ export class CodebaseService {
   ): Promise<void> {
     const revision = await this.findRevision(projectId, revisionId, userId);
 
+    const storageRoot = `projects/${projectId.toString()}/revisions/${revision._id.toString()}`;
+
+    await this.storageService.deletePrefix(storageRoot);
+
     await this.projectFileRepository.deleteMany({
       revision: revision._id,
     });
@@ -313,8 +317,6 @@ export class CodebaseService {
       _id: revision._id,
       project: projectId,
     });
-
-    // TODO: Delete the archive and extracted files from storage too.
   }
 
   async findRevisionFile(
