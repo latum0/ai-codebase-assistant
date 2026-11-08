@@ -194,4 +194,107 @@ describe('Codebase E2E', () => {
       await authRequest().get(`${baseUrl()}/${unknownRevisionId}`).expect(404);
     });
   });
+
+  describe('GET /revisions/:revisionId/files', () => {
+    it('should return files belonging to a revision', async () => {
+      const response = await authRequest()
+        .get(`${baseUrl()}/${revisionId}/files`)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+
+      const paths = response.body.map((file: any) => file.path);
+
+      expect(paths).toContain('README.md');
+      expect(paths).toContain('src/index.ts');
+    });
+
+    it('should return 404 when the revision does not exist', async () => {
+      const unknownRevisionId = new Types.ObjectId().toString();
+
+      await authRequest()
+        .get(`${baseUrl()}/${unknownRevisionId}/files`)
+        .expect(404);
+    });
+  });
+
+  describe('GET revision file metadata', () => {
+    it('should return metadata for a file', async () => {
+      const filesResponse = await authRequest()
+        .get(`${baseUrl()}/${revisionId}/files`)
+        .expect(200);
+
+      const file = filesResponse.body.find(
+        (item: any) => item.path === 'src/index.ts',
+      );
+
+      expect(file).toBeDefined();
+
+      const response = await authRequest()
+        .get(`${baseUrl()}/${revisionId}/files/${file._id}`)
+        .expect(200);
+
+      expect(response.body._id).toBe(file._id);
+      expect(response.body.path).toBe('src/index.ts');
+    });
+
+    it('should reject an invalid file ID', async () => {
+      await authRequest()
+        .get(`${baseUrl()}/${revisionId}/files/invalid-id`)
+        .expect(400);
+    });
+
+    it('should return 404 when the file does not exist', async () => {
+      const unknownFileId = new Types.ObjectId().toString();
+
+      await authRequest()
+        .get(`${baseUrl()}/${revisionId}/files/${unknownFileId}`)
+        .expect(404);
+    });
+  });
+
+  describe('DELETE /revisions/:revisionId', () => {
+    it('should delete a revision and its file records', async () => {
+      // Create a separate revision so the other tests
+      // can continue using the initial revision.
+      const revision = await uploadRevision(
+        accessToken,
+        app,
+        projectId,
+        createdRevisionIds,
+      );
+
+      const id = revision._id.toString();
+
+      await authRequest().delete(`${baseUrl()}/${id}`).expect(204);
+
+      // It has already been deleted, so don't delete it again
+      // during afterAll cleanup.
+      const index = createdRevisionIds.indexOf(id);
+
+      if (index !== -1) {
+        createdRevisionIds.splice(index, 1);
+      }
+
+      // The revision should no longer exist.
+      await authRequest().get(`${baseUrl()}/${id}`).expect(404);
+    });
+
+    it('should reject an invalid revision ID', async () => {
+      await authRequest().delete(`${baseUrl()}/invalid-id`).expect(400);
+    });
+  });
+
+  describe('Authentication', () => {
+    it('should reject requests without an access token', async () => {
+      await request(app.getHttpServer()).get(baseUrl()).expect(401);
+    });
+
+    it('should reject requests with an invalid access token', async () => {
+      await request(app.getHttpServer())
+        .get(baseUrl())
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401);
+    });
+  });
 });
