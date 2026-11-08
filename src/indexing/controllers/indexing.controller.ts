@@ -1,4 +1,4 @@
-import { Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
@@ -25,6 +25,40 @@ export class IndexingController {
       userId,
       projectId,
       revisionId,
+    );
+  }
+
+  @Get()
+  findIndexingRuns(
+    @Param('projectId', ParseObjectIdPipe)
+    projectId: Types.ObjectId,
+
+    @Param('revisionId', ParseObjectIdPipe)
+    revisionId: Types.ObjectId,
+
+    @UserContext() userId: Types.ObjectId,
+  ) {
+    return this.indexingService.findIndexingRuns(userId, projectId, revisionId);
+  }
+
+  @Get(':runId')
+  findIndexingRun(
+    @Param('projectId', ParseObjectIdPipe)
+    projectId: Types.ObjectId,
+
+    @Param('revisionId', ParseObjectIdPipe)
+    revisionId: Types.ObjectId,
+
+    @Param('runId', ParseObjectIdPipe)
+    runId: Types.ObjectId,
+
+    @UserContext() userId: Types.ObjectId,
+  ) {
+    return this.indexingService.findIndexingRun(
+      userId,
+      projectId,
+      revisionId,
+      runId,
     );
   }
 }

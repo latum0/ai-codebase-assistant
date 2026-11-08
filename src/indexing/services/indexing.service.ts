@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CodebaseService } from '../../codebase/services/codebase.service.js';
 import { IndexingStatus } from '../entities/indexing.entity.js';
@@ -42,5 +46,38 @@ export class IndexingService {
       revisionId,
       status: IndexingStatus.QUEUED,
     });
+  }
+
+  async findIndexingRuns(
+    userId: Types.ObjectId,
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+  ) {
+    await this.codebaseService.findRevision(projectId, revisionId, userId);
+
+    return this.indexingRunRepository.find(
+      { revisionId },
+      { sort: { createdAt: -1 } },
+    );
+  }
+
+  async findIndexingRun(
+    userId: Types.ObjectId,
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    runId: Types.ObjectId,
+  ) {
+    await this.codebaseService.findRevision(projectId, revisionId, userId);
+
+    const indexingRun = await this.indexingRunRepository.findOne({
+      _id: runId,
+      revisionId,
+    });
+
+    if (!indexingRun) {
+      throw new NotFoundException('Indexing run not found.');
+    }
+
+    return indexingRun;
   }
 }
