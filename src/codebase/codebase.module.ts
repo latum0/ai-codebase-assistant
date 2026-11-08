@@ -38,5 +38,6 @@ import { ProjectsModule } from '../projects/projects.module.js';
     ProjectFileRepository,
     ProjectRevisionRepository,
   ],
+  exports: [CodebaseService],
 })
 export class CodebaseModule {}
