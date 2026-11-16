@@ -298,6 +298,13 @@ export class CodebaseService {
     });
   }
 
+  async findIndexableRevisionFiles(revisionId: Types.ObjectId) {
+    return this.projectFileRepository.find({
+      revision: revisionId,
+      isIndexable: true,
+    });
+  }
+
   async removeRevision(
     projectId: Types.ObjectId,
     revisionId: Types.ObjectId,

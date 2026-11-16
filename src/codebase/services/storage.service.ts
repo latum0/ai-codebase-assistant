@@ -78,4 +78,9 @@ export class StorageService {
 
     return destination;
   }
+
+  async readBuffer(key: string): Promise<Buffer> {
+    const { readFile } = await import('node:fs/promises');
+    return readFile(this.resolveSafeKey(key));
+  }
 }

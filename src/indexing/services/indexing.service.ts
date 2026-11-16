@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CodebaseService } from '../../codebase/services/codebase.service.js';
-import { IndexingStatus } from '../entities/indexing.entity.js';
+import { IndexingStatus } from '../entities/indexingRun.entity.js';
 import { IndexingRunRepository } from '../repositories/indexing.repository.js';
 
 @Injectable()
