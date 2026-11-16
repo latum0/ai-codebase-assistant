@@ -299,10 +299,7 @@ export class CodebaseService {
   }
 
   async findIndexableRevisionFiles(revisionId: Types.ObjectId) {
-    return this.projectFileRepository.find({
-      revision: revisionId,
-      isIndexable: true,
-    });
+    return this.projectFileRepository.findByRevision(revisionId);
   }
 
   async removeRevision(

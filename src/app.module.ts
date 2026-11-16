@@ -21,6 +21,9 @@ import { IndexingModule } from './indexing/indexing.module.js';
         API_PREFIX: Joi.string().default('api'),
         MONGODB_URI: Joi.string().required(),
         CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
+        EMBEDDING_API_URL: Joi.string().uri().required(),
+        EMBEDDING_API_KEY: Joi.string().required(),
+        EMBEDDING_MODEL: Joi.string().required(),
       }),
     }),
 
