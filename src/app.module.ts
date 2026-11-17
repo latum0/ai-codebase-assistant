@@ -21,9 +21,10 @@ import { IndexingModule } from './indexing/indexing.module.js';
         API_PREFIX: Joi.string().default('api'),
         MONGODB_URI: Joi.string().required(),
         CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
-        EMBEDDING_API_URL: Joi.string().uri().required(),
-        EMBEDDING_API_KEY: Joi.string().required(),
-        EMBEDDING_MODEL: Joi.string().required(),
+        // Optional at startup so the API can run before Gemini is configured.
+        // Indexing will report a clear error until a key is supplied.
+        GEMINI_API_KEY: Joi.string().allow('').default(''),
+        GEMINI_EMBEDDING_MODEL: Joi.string().default('gemini-embedding-001'),
       }),
     }),
 

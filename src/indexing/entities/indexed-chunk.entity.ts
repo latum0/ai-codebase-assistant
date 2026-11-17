@@ -31,7 +31,7 @@ export class IndexedChunk {
   @Prop({ type: String, required: true })
   content!: string;
 
-  // it's a list of numbers representing the chunk’s meaning.
+  // the vector
   @Prop({ type: [Number], required: true })
   embedding!: number[];
 }

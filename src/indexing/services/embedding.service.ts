@@ -1,55 +1,73 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+
+export type EmbeddingTask = 'RETRIEVAL_DOCUMENT' | 'CODE_RETRIEVAL_QUERY';
 
 @Injectable()
 export class EmbeddingService {
   constructor(private readonly configService: ConfigService) {}
 
-  async embed(text: string): Promise<number[]> {
-    const baseUrl = this.configService
-      .getOrThrow<string>('EMBEDDING_API_URL')
-      .replace(/\/+$/, '');
-    const apiKey = this.configService.getOrThrow<string>('EMBEDDING_API_KEY');
-    const model = this.configService.getOrThrow<string>('EMBEDDING_MODEL');
+  // returns the vector generated of a chunk
+  async embed(
+    text: string,
+    taskType: EmbeddingTask = 'RETRIEVAL_DOCUMENT',
+  ): Promise<number[]> {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'Set GEMINI_API_KEY before starting an indexing run. Create a key in Google AI Studio.',
+      );
+    }
 
-    const response = await fetch(`${baseUrl}/embeddings`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const model = this.configService.get<string>(
+      'GEMINI_EMBEDDING_MODEL',
+      'gemini-embedding-001',
+    );
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          taskType,
+          content: {
+            parts: [{ text }],
+          },
+        }),
       },
-      body: JSON.stringify({
-        model,
-        input: text,
-      }),
-    });
+    );
 
     if (!response.ok) {
-      throw new InternalServerErrorException(
-        `Embedding provider returned HTTP ${response.status}`,
+      throw new ServiceUnavailableException(
+        `Gemini embedding request failed with HTTP ${response.status}. Check the API key, model, and free-tier quota.`,
       );
     }
 
     const result: unknown = await response.json();
-
     if (
       typeof result !== 'object' ||
       result === null ||
-      !('data' in result) ||
-      !Array.isArray(result.data) ||
-      typeof result.data[0] !== 'object' ||
-      result.data[0] === null ||
-      !('embedding' in result.data[0]) ||
-      !Array.isArray(result.data[0].embedding) ||
-      !result.data[0].embedding.every(
+      !('embedding' in result) ||
+      typeof result.embedding !== 'object' ||
+      result.embedding === null ||
+      !('values' in result.embedding) ||
+      !Array.isArray(result.embedding.values) ||
+      !result.embedding.values.every(
         (value: unknown) => typeof value === 'number' && Number.isFinite(value),
       )
     ) {
       throw new InternalServerErrorException(
-        'Embedding provider returned an invalid response',
+        'Gemini returned an invalid embedding response.',
       );
     }
 
-    return result.data[0].embedding as number[];
+    return result.embedding.values as number[];
   }
 }
