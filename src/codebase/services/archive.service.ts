@@ -23,8 +23,8 @@ export interface ExtractedArchive {
 @Injectable()
 export class ArchiveService {
   private readonly maxEntries = 10_000;
-  private readonly maxFileSize = 10 * 1024 * 1024; // 10 MB
-  private readonly maxTotalSize = 100 * 1024 * 1024; // 100 MB
+  private readonly maxFileSize = 50 * 1024 * 1024; //50MB
+  private readonly maxTotalSize = 1024 * 1024 * 1024; //1GB
 
   async extractAndScan(buffer: Buffer): Promise<ExtractedArchive> {
     if (!buffer?.length) {

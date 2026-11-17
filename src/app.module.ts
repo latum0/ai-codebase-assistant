@@ -8,6 +8,7 @@ import { ProjectsModule } from './projects/projects.module.js';
 import { UsersModule } from './users/users.module.js';
 import { CodebaseModule } from './codebase/codebase.module.js';
 import { IndexingModule } from './indexing/indexing.module.js';
+import { RetrievalModule } from './retrieval/retrieval.module.js';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { IndexingModule } from './indexing/indexing.module.js';
     ProjectsModule,
     CodebaseModule,
     IndexingModule,
+    RetrievalModule,
   ],
 })
 export class AppModule {}

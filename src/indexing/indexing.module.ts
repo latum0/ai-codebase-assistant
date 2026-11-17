@@ -30,5 +30,6 @@ import {
     IndexedChunkRepository,
     EmbeddingService,
   ],
+  exports: [IndexedChunkRepository, EmbeddingService],
 })
 export class IndexingModule {}
