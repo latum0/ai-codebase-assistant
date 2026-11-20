@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { EntityRepository } from '../../utils/entity.repository.js';
 import { IndexedChunk } from '../entities/indexed-chunk.entity.js';
 
@@ -11,5 +11,15 @@ export class IndexedChunkRepository extends EntityRepository<IndexedChunk> {
     indexedChunkModel: Model<IndexedChunk>,
   ) {
     super(indexedChunkModel);
+  }
+
+  async findByProjectRevision(
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+  ): Promise<IndexedChunk[]> {
+    return this.entityModel
+      .find({ projectId, revisionId })
+      .lean<IndexedChunk[]>()
+      .exec();
   }
 }
