@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { CodebaseService } from '../../codebase/services/codebase.service.js';
 import { IndexedChunkRepository } from '../../indexing/repositories/indexed-chunk.repository.js';
 import { EmbeddingService } from '../../indexing/services/embedding.service.js';
+import { GeminiAnswerService } from './gemini-answer.service.js';
 
 const DEFAULT_RESULT_LIMIT = 5;
 
@@ -12,7 +13,43 @@ export class RetrievalService {
     private readonly indexedChunkRepository: IndexedChunkRepository,
     private readonly embeddingService: EmbeddingService,
     private readonly codebaseService: CodebaseService,
+    private readonly geminiAnswerService: GeminiAnswerService,
   ) {}
+
+  async askQuestion(
+    userId: Types.ObjectId,
+    projectId: Types.ObjectId,
+    revisionId: Types.ObjectId,
+    question: string,
+    limit?: number,
+  ) {
+    const retrieval = await this.search(
+      userId,
+      projectId,
+      revisionId,
+      question,
+      limit,
+    );
+
+    const answer = await this.geminiAnswerService.generateAnswer(
+      question.trim(),
+      retrieval.results,
+    );
+
+    return {
+      projectId,
+      revisionId,
+      question: question.trim(),
+      answer,
+      sources: retrieval.results.map(
+        ({ filePath, chunkIndex, score }) => ({
+          filePath,
+          chunkIndex,
+          score,
+        }),
+      ),
+    };
+  }
 
   async search(
     userId: Types.ObjectId,
