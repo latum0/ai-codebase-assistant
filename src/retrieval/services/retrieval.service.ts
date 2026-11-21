@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { CodebaseService } from '../../codebase/services/codebase.service.js';
 import { IndexedChunkRepository } from '../../indexing/repositories/indexed-chunk.repository.js';
 import { EmbeddingService } from '../../indexing/services/embedding.service.js';
-import { GeminiAnswerService } from './gemini-answer.service.js';
+import { OpenModelAnswerService } from './open-model-answer.service.js';
 
 const DEFAULT_RESULT_LIMIT = 5;
 
@@ -13,7 +13,7 @@ export class RetrievalService {
     private readonly indexedChunkRepository: IndexedChunkRepository,
     private readonly embeddingService: EmbeddingService,
     private readonly codebaseService: CodebaseService,
-    private readonly geminiAnswerService: GeminiAnswerService,
+    private readonly answerService: OpenModelAnswerService,
   ) {}
 
   async askQuestion(
@@ -31,7 +31,7 @@ export class RetrievalService {
       limit,
     );
 
-    const answer = await this.geminiAnswerService.generateAnswer(
+    const answer = await this.answerService.generateAnswer(
       question.trim(),
       retrieval.results,
     );

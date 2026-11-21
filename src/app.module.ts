@@ -26,7 +26,8 @@ import { RetrievalModule } from './retrieval/retrieval.module.js';
         // Indexing will report a clear error until a key is supplied.
         GEMINI_API_KEY: Joi.string().allow('').default(''),
         GEMINI_EMBEDDING_MODEL: Joi.string().default('gemini-embedding-001'),
-        GEMINI_GENERATION_MODEL: Joi.string().default('gemini-3.8-flash'),
+        GROQ_API_KEY: Joi.string().allow('').default(''),
+        GROQ_GENERATION_MODEL: Joi.string().default('openai/gpt-oss-20b'),
       }),
     }),
 

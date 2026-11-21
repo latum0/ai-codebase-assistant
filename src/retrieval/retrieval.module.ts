@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { CodebaseModule } from '../codebase/codebase.module.js';
 import { IndexingModule } from '../indexing/indexing.module.js';
 import { RetrievalController } from './controllers/retrieval.controller.js';
-import { GeminiAnswerService } from './services/gemini-answer.service.js';
+import { OpenModelAnswerService } from './services/open-model-answer.service.js';
 import { RetrievalService } from './services/retrieval.service.js';
 
 @Module({
   imports: [CodebaseModule, IndexingModule],
   controllers: [RetrievalController],
-  providers: [RetrievalService, GeminiAnswerService],
+  providers: [RetrievalService, OpenModelAnswerService],
 })
 export class RetrievalModule {}
