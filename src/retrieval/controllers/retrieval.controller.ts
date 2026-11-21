@@ -59,7 +59,7 @@ export class RetrievalController {
   @ApiOperation({
     summary: 'Ask a question about indexed code',
     description:
-      'Retrieves relevant chunks from the selected revision and asks Gemini to answer using those chunks.',
+      'Retrieves relevant chunks from the selected revision and asks the configured answer model to answer using those chunks.',
   })
   @ApiResponse({
     status: 200,
@@ -71,7 +71,7 @@ export class RetrievalController {
   @ApiResponse({ status: 409, description: 'Revision has no usable index.' })
   @ApiResponse({
     status: 503,
-    description: 'Gemini is unavailable or unconfigured.',
+    description: 'The embedding or answer model is unavailable or unconfigured.',
   })
   askQuestion(
     @Param('projectId', ParseObjectIdPipe) projectId: Types.ObjectId,

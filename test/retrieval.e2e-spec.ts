@@ -11,6 +11,7 @@ import {
 } from '../src/codebase/entities/projectRevision.entity.js';
 import { IndexedChunk } from '../src/indexing/entities/indexed-chunk.entity.js';
 import { EmbeddingService } from '../src/indexing/services/embedding.service.js';
+import { OpenModelAnswerService } from '../src/retrieval/services/open-model-answer.service.js';
 import { appInit } from './helpers/appInit.js';
 import { createEntity } from './helpers/createEntities.js';
 
@@ -26,9 +27,14 @@ describe('Retrieval E2E', () => {
   let revisionModel: Model<ProjectRevision>;
   let indexedChunkModel: Model<IndexedChunk>;
   let embedSpy: jest.SpiedFunction<EmbeddingService['embed']>;
+  let generateAnswerSpy: jest.SpiedFunction<
+    OpenModelAnswerService['generateAnswer']
+  >;
 
   const getSearchUrl = (targetRevisionId = revisionId) =>
     `/codebase/projects/${projectId}/revisions/${targetRevisionId}/retrieval/search`;
+  const getQuestionUrl = (targetRevisionId = revisionId) =>
+    `/codebase/projects/${projectId}/revisions/${targetRevisionId}/retrieval/questions`;
 
   beforeAll(async () => {
     const session = await appInit();
@@ -71,6 +77,11 @@ describe('Retrieval E2E', () => {
     embedSpy = jest
       .spyOn(app.get(EmbeddingService), 'embed')
       .mockResolvedValue([1, 0]);
+    generateAnswerSpy = jest
+      .spyOn(app.get(OpenModelAnswerService), 'generateAnswer')
+      .mockResolvedValue(
+        'Authentication is handled in [src/auth.ts#0].',
+      );
 
     await indexedChunkModel.create([
       {
@@ -153,6 +164,58 @@ describe('Retrieval E2E', () => {
       'Where is authentication handled?',
       'CODE_RETRIEVAL_QUERY',
     );
+  });
+
+  it('answers a question using retrieved chunks and returns their sources', async () => {
+    const response = await request(app.getHttpServer())
+      .post(getQuestionUrl())
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ query: 'Where is authentication handled?', limit: 2 })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      projectId,
+      revisionId,
+      question: 'Where is authentication handled?',
+      answer: 'Authentication is handled in [src/auth.ts#0].',
+    });
+    expect(response.body.sources).toHaveLength(2);
+    expect(response.body.sources[0]).toMatchObject({
+      filePath: 'src/auth.ts',
+      chunkIndex: 0,
+      score: 1,
+    });
+    expect(generateAnswerSpy).toHaveBeenCalledWith(
+      'Where is authentication handled?',
+      [
+        expect.objectContaining({
+          filePath: 'src/auth.ts',
+          chunkIndex: 0,
+          content:
+            'Authentication verifies the user password and creates a token.',
+        }),
+        expect.objectContaining({
+          filePath: 'src/user.ts',
+          chunkIndex: 1,
+          content: 'The user service loads profile information.',
+        }),
+      ],
+    );
+  });
+
+  it('rejects an unauthenticated question request', async () => {
+    await request(app.getHttpServer())
+      .post(getQuestionUrl())
+      .send({ query: 'Where is authentication handled?' })
+      .expect(401);
+  });
+
+  it('validates the question request body', async () => {
+    await request(app.getHttpServer())
+      .post(getQuestionUrl())
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ query: '   ' })
+      .expect(400);
   });
 
   it('rejects a request without authentication', async () => {
